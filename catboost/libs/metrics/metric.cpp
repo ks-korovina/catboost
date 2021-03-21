@@ -4838,156 +4838,156 @@ static bool HintedToEvalOnTrain(const NCatboostOptions::TLossDescription& metric
     return HintedToEvalOnTrain(metricDescription.GetLossParamsMap());
 }
 
-TVector<THolder<IMetric>> CreateMetric(ELossFunction metric, const TLossParams& params, int approxDimension) {
-    TVector<THolder<IMetric>> result;
-    TSet<TString> validParams;
+std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(ELossFunction metric, const TLossParams& params, int approxDimension) {
+    std::pair<TVector<THolder<IMetric>>, TSet<TString>> result;
+    auto& [metrics, validParams] = ans;
     TMetricConfig config(metric, params, approxDimension, &validParams);
 
     switch (metric) {
         case ELossFunction::MultiRMSE:
-            AppendTemporaryMetricsVector(TMultiRMSEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMultiRMSEMetric::Create(config), &metrics);
             break;
         case ELossFunction::RMSEWithUncertainty:
-            AppendTemporaryMetricsVector(TRMSEWithUncertaintyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TRMSEWithUncertaintyMetric::Create(config), &metrics);
             break;
         case ELossFunction::Logloss:
-            AppendTemporaryMetricsVector(TCrossEntropyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TCrossEntropyMetric::Create(config), &metrics);
             break;
         case ELossFunction::CrossEntropy:
-            AppendTemporaryMetricsVector(TCrossEntropyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TCrossEntropyMetric::Create(config), &metrics);
             break;
         case ELossFunction::RMSE:
-            AppendTemporaryMetricsVector(TRMSEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TRMSEMetric::Create(config), &metrics);
             break;
         case ELossFunction::Lq:
-            AppendTemporaryMetricsVector(TLqMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TLqMetric::Create(config), &metrics);
             break;
         case ELossFunction::MAE:
         case ELossFunction::Quantile:
-            AppendTemporaryMetricsVector(TQuantileMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TQuantileMetric::Create(config), &metrics);
             break;
         case ELossFunction::Expectile:
-            AppendTemporaryMetricsVector(TExpectileMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TExpectileMetric::Create(config), &metrics);
             break;
         case ELossFunction::LogLinQuantile:
-            AppendTemporaryMetricsVector(TLogLinQuantileMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TLogLinQuantileMetric::Create(config), &metrics);
             break;
         case ELossFunction::AverageGain:
         case ELossFunction::QueryAverage:
-            AppendTemporaryMetricsVector(TAverageGain::Create(config), &result);
+            AppendTemporaryMetricsVector(TAverageGain::Create(config), &metrics);
             break;
         case ELossFunction::MAPE:
-            AppendTemporaryMetricsVector(TMAPEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMAPEMetric::Create(config), &metrics);
             break;
         case ELossFunction::Poisson:
-            AppendTemporaryMetricsVector(TPoissonMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPoissonMetric::Create(config), &metrics);
             break;
         case ELossFunction::Tweedie:
-            AppendTemporaryMetricsVector(TTweedieMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TTweedieMetric::Create(config), &metrics);
             break;
         case ELossFunction::MedianAbsoluteError:
-            AppendTemporaryMetricsVector(TMedianAbsoluteErrorMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMedianAbsoluteErrorMetric::Create(config), &metrics);
             break;
         case ELossFunction::SMAPE:
-            AppendTemporaryMetricsVector(TSMAPEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TSMAPEMetric::Create(config), &metrics);
             break;
         case ELossFunction::MSLE:
-            AppendTemporaryMetricsVector(TMSLEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMSLEMetric::Create(config), &metrics);
             break;
         case ELossFunction::PRAUC:
-            AppendTemporaryMetricsVector(TPRAUCMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPRAUCMetric::Create(config), &metrics);
             break;
         case ELossFunction::MultiClass:
-            AppendTemporaryMetricsVector(TMultiClassMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMultiClassMetric::Create(config), &metrics);
             break;
         case ELossFunction::MultiClassOneVsAll:
-            AppendTemporaryMetricsVector(TMultiClassOneVsAllMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMultiClassOneVsAllMetric::Create(config), &metrics);
             break;
         case ELossFunction::PairLogit:
-            AppendTemporaryMetricsVector(TPairLogitMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPairLogitMetric::Create(config), &metrics);
             break;
         case ELossFunction::QueryRMSE:
-            AppendTemporaryMetricsVector(TQueryRMSEMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TQueryRMSEMetric::Create(config), &metrics);
             break;
         case ELossFunction::QueryAUC:
-            AppendTemporaryMetricsVector(TQueryAUCMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TQueryAUCMetric::Create(config), &metrics);
             break;
         case ELossFunction::QuerySoftMax:
-            AppendTemporaryMetricsVector(TQuerySoftMaxMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TQuerySoftMaxMetric::Create(config), &metrics);
             break;
         case ELossFunction::PFound:
-            AppendTemporaryMetricsVector(TPFoundMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPFoundMetric::Create(config), &metrics);
             break;
         case ELossFunction::LogLikelihoodOfPrediction:
-            AppendTemporaryMetricsVector(TLLPMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TLLPMetric::Create(config), &metrics);
             break;
         case ELossFunction::DCG:
         case ELossFunction::NDCG:
-            AppendTemporaryMetricsVector(TDcgMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TDcgMetric::Create(config), &metrics);
             break;
         case ELossFunction::R2:
-            AppendTemporaryMetricsVector(TR2Metric::Create(config), &result);
+            AppendTemporaryMetricsVector(TR2Metric::Create(config), &metrics);
             break;
         case ELossFunction::NumErrors:
-            AppendTemporaryMetricsVector(TNumErrorsMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TNumErrorsMetric::Create(config), &metrics);
             break;
         case ELossFunction::AUC:
-            AppendTemporaryMetricsVector(TAUCMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TAUCMetric::Create(config), &metrics);
             break;
         case ELossFunction::BalancedAccuracy:
-            AppendTemporaryMetricsVector(TBalancedAccuracyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TBalancedAccuracyMetric::Create(config), &metrics);
             break;
         case ELossFunction::BalancedErrorRate:
-            AppendTemporaryMetricsVector(TBalancedErrorRate::Create(config), &result);
+            AppendTemporaryMetricsVector(TBalancedErrorRate::Create(config), &metrics);
             break;
         case ELossFunction::HammingLoss:
-            AppendTemporaryMetricsVector(THammingLossMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(THammingLossMetric::Create(config), &metrics);
             break;
         case ELossFunction::HingeLoss:
-            AppendTemporaryMetricsVector(THingeLossMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(THingeLossMetric::Create(config), &metrics);
             break;
         case ELossFunction::PairAccuracy:
-            AppendTemporaryMetricsVector(TPairAccuracyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPairAccuracyMetric::Create(config), &metrics);
             break;
         case ELossFunction::PrecisionAt:
-            AppendTemporaryMetricsVector(TPrecisionAtKMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TPrecisionAtKMetric::Create(config), &metrics);
             break;
         case ELossFunction::RecallAt:
-            AppendTemporaryMetricsVector(TRecallAtKMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TRecallAtKMetric::Create(config), &metrics);
             break;
         case ELossFunction::MAP:
-            AppendTemporaryMetricsVector(TMAPKMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TMAPKMetric::Create(config), &metrics);
             break;
         case ELossFunction::UserPerObjMetric:
-            AppendTemporaryMetricsVector(TUserDefinedPerObjectMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TUserDefinedPerObjectMetric::Create(config), &metrics);
             break;
         case ELossFunction::UserQuerywiseMetric:
-            AppendTemporaryMetricsVector(TUserDefinedQuerywiseMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TUserDefinedQuerywiseMetric::Create(config), &metrics);
             break;
         case ELossFunction::QueryCrossEntropy:
-            AppendTemporaryMetricsVector(TQueryCrossEntropyMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TQueryCrossEntropyMetric::Create(config), &metrics);
             break;
         case ELossFunction::Huber:
-            AppendTemporaryMetricsVector(THuberLossMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(THuberLossMetric::Create(config), &metrics);
             break;
         case ELossFunction::FilteredDCG:
-            AppendTemporaryMetricsVector(TFilteredDcgMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TFilteredDcgMetric::Create(config), &metrics);
             break;
         case ELossFunction::FairLoss:
-            AppendTemporaryMetricsVector(TFairLossMetric::Create(config), &result);
+            AppendTemporaryMetricsVector(TFairLossMetric::Create(config), &metrics);
             break;
         case ELossFunction::NormalizedGini:
-            AppendTemporaryMetricsVector(TNormalizedGini::Create(config), &result);
+            AppendTemporaryMetricsVector(TNormalizedGini::Create(config), &metrics);
             break;
         case ELossFunction::Combination:
-            AppendTemporaryMetricsVector(TCombinationLoss::Create(config), &result);
+            AppendTemporaryMetricsVector(TCombinationLoss::Create(config), &metrics);
             break;
         default: {
-            result = CreateCachingMetrics(config);
+            metrics = CreateCachingMetrics(config);
 
             if (!result) {
                 CB_ENSURE(false, "Unsupported metric: " << metric);
-                return TVector<THolder<IMetric>>();
+                return result;
             }
             break;
         }
@@ -5027,14 +5027,21 @@ TVector<THolder<IMetric>> CreateMetric(ELossFunction metric, const TLossParams& 
         }
     }
 
+    return result;
+}
+
+TVector<THolder<IMetric>> CreateMetric(ELossFunction metric, const TLossParams& params, int approxDimension) {
+    auto [metrics, validParams] = CreateMetricWithConstraints(metric, params, approxDimension);
+
     CheckParameters(ToString(metric), validParams, params.GetParamsMap());
 
     if (metric == ELossFunction::Combination) {
         CheckCombinationParameters(params.GetParamsMap());
     }
 
-    return result;
+    return std::move(metrics);
 }
+
 
 static TVector<THolder<IMetric>> CreateMetricFromDescription(const TString& description, int approxDimension) {
     ELossFunction metric = ParseLossType(description);
@@ -5360,3 +5367,86 @@ void AppendTemporaryMetricsVector(TVector<THolder<IMetric>>&& src, TVector<THold
 }
 
 } // namespace internal
+
+TMap<TString, TMaybe<TString>> ExportMetricParamsInfo(const ELossFunction loss, const TMaybe<TMap<TString, TString>> obligatoryParamsPlaceholder) {
+    TLossParams initialParams;
+    TSet<TString> obligatoryParams;
+    if (obligatoryParamsPlaceholder) {
+        initialParams = TLossParams::FromMap(*obligatoryParamsPlaceholder);
+        for (const auto& [parameter, value] : *obligatoryParamsPlaceholder) {
+            obligatoryParams.insert(parameter);
+        }
+    }
+    const auto& [metrics, validParams] = CreateMetricWithConstraints(loss, initialParams, 1);
+    const TString& createdMetricDescription = metrics[0]->GetDescription();
+
+    // Get all valid params
+    TMap<TString, TMaybe<TString>> exportParams;
+    for (const TString& parameter : validParams) {
+        exportParams[parameter] = TMaybe<TString>();
+    }
+
+    // Set default params
+    const TLossParams defaultParams = ParseLossParams(createdMetricDescription);
+    for (const auto& [parameter, value] : defaultParams.GetParamsMap()) {
+        if (!obligatoryParams.contains(parameter)) {
+            exportParams[parameter] = value;
+        }
+    }
+
+    return exportParams;
+}
+
+NJson::TJsonValue ExportAllMetricsParams() {
+    const TMap<ELossFunction, TMap<TString, TString>> allObligatoryParams = {
+        {ELossFunction::Lq, {{"q", "1"}}},
+        {ELossFunction::Huber, {{"delta", "1"}}},
+        {ELossFunction::Tweedie, {{"variance_power", "1.5"}}},
+        {ELossFunction::NumErrors, {{"greater_than", "1.0"}}},
+        {ELossFunction::AverageGain, {{"top", "1"}}},
+        {ELossFunction::QueryAverage, {{"top", "1"}}},
+    };
+
+    // It would be better if we were catching exception instead of using blacklist
+    const TSet<ELossFunction> unsupportedMetrics = {
+        ELossFunction::PairLogitPairwise,
+        ELossFunction::YetiRank,
+        ELossFunction::YetiRankPairwise,
+        ELossFunction::StochasticFilter,
+        ELossFunction::StochasticRank,
+        ELossFunction::PythonUserDefinedPerObject,
+        ELossFunction::PythonUserDefinedMultiRegression,
+        ELossFunction::Combination
+    };
+
+    TMap<ELossFunction, TMap<TString, TMaybe<TString>>> allMetricParams;
+
+    for (const ELossFunction& loss : GetEnumAllValues<ELossFunction>()) {
+        if (unsupportedMetrics.contains(loss)) {
+            continue;
+        }
+        TMaybe<TMap<TString, TString>> lossObligatoryParams;
+        if (allObligatoryParams.contains(loss)) {
+            lossObligatoryParams = allObligatoryParams.at(loss);
+        }
+        const auto& params = ExportMetricParamsInfo(loss, lossObligatoryParams);
+        allMetricParams[loss] = params;
+    }
+
+    // Export params to JSON
+    NJson::TJsonValue exportJsonParams;
+
+    for (const auto& [loss, params] : allMetricParams) {
+        NJson::TJsonValue metricJsonParams;
+        for (const auto& [parameter, value] : params) {
+            if (value) {
+                metricJsonParams.InsertValue(parameter, NJson::TJsonValue(*value));
+            } else {
+                metricJsonParams.InsertValue(parameter, NJson::TJsonValue());
+            }
+        }
+        exportJsonParams.InsertValue(ToString(loss), metricJsonParams);
+    }
+
+    return exportJsonParams;
+}

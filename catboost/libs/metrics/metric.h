@@ -304,6 +304,8 @@ TVector<THolder<IMetric>> CreateMetricFromDescription(const NCatboostOptions::TL
                                                       int approxDimension);
 
 // For tests.
+std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(ELossFunction metric, const TLossParams& params, int approxDimension);
+
 TVector<THolder<IMetric>> CreateMetric(ELossFunction metric, const TLossParams& params, int approxDimension);
 
 TVector<THolder<IMetric>> CreateMetrics(
@@ -414,3 +416,7 @@ TVector<THolder<IMetric>> AsVector(THolder<MetricType>&& metric) {
 }
 
 } // namespace internal
+
+TMap<TString, TMaybe<TString>> ExportMetricParamsInfo(const ELossFunction loss, const TMaybe<TMap<TString, TString>> obligatoryParamsPlaceholder);
+
+NJson::TJsonValue ExportAllMetricsParams();
