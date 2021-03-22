@@ -4838,9 +4838,9 @@ static bool HintedToEvalOnTrain(const NCatboostOptions::TLossDescription& metric
     return HintedToEvalOnTrain(metricDescription.GetLossParamsMap());
 }
 
-std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(ELossFunction metric, const TLossParams& params, int approxDimension) {
+std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithValidParams(ELossFunction metric, const TLossParams& params, int approxDimension) {
     std::pair<TVector<THolder<IMetric>>, TSet<TString>> result;
-    auto& [metrics, validParams] = ans;
+    auto& [metrics, validParams] = result;
     TMetricConfig config(metric, params, approxDimension, &validParams);
 
     switch (metric) {
@@ -4985,7 +4985,7 @@ std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(
         default: {
             metrics = CreateCachingMetrics(config);
 
-            if (!result) {
+            if (!metrics) {
                 CB_ENSURE(false, "Unsupported metric: " << metric);
                 return result;
             }
@@ -4998,12 +4998,12 @@ std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(
     }
 
     validParams.insert("hints");
-    if (result && !result[0]->UseWeights.IsIgnored()) {
+    if (metrics && !metrics[0]->UseWeights.IsIgnored()) {
         validParams.insert("use_weights");
     }
 
     if (ShouldSkipCalcOnTrainByDefault(metric)) {
-        for (THolder<IMetric>& metricHolder : result) {
+        for (THolder<IMetric>& metricHolder : metrics) {
             metricHolder->AddHint("skip_train", "true");
         }
         if (!HintedToEvalOnTrain(params.GetParamsMap())) {
@@ -5014,7 +5014,7 @@ std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(
     if (params.GetParamsMap().contains("hints")) { // TODO(smirnovpavel): hints shouldn't be added for each metric
         TMap<TString, TString> hints = ParseHintsDescription(params.GetParamsMap().at("hints"));
         for (const auto& hint : hints) {
-            for (THolder<IMetric>& metricHolder : result) {
+            for (THolder<IMetric>& metricHolder : metrics) {
                 metricHolder->AddHint(hint.first, hint.second);
             }
         }
@@ -5022,7 +5022,7 @@ std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(
 
     if (params.GetParamsMap().contains("use_weights")) {
         const bool useWeights = FromString<bool>(params.GetParamsMap().at("use_weights"));
-        for (THolder<IMetric>& metricHolder : result) {
+        for (THolder<IMetric>& metricHolder : metrics) {
             metricHolder->UseWeights = useWeights;
         }
     }
@@ -5031,7 +5031,7 @@ std::pair<TVector<THolder<IMetric>>, TSet<TString>> CreateMetricWithConstraints(
 }
 
 TVector<THolder<IMetric>> CreateMetric(ELossFunction metric, const TLossParams& params, int approxDimension) {
-    auto [metrics, validParams] = CreateMetricWithConstraints(metric, params, approxDimension);
+    auto [metrics, validParams] = CreateMetricWithValidParams(metric, params, approxDimension);
 
     CheckParameters(ToString(metric), validParams, params.GetParamsMap());
 
@@ -5368,7 +5368,7 @@ void AppendTemporaryMetricsVector(TVector<THolder<IMetric>>&& src, TVector<THold
 
 } // namespace internal
 
-TMap<TString, TMaybe<TString>> ExportMetricParamsInfo(const ELossFunction loss, const TMaybe<TMap<TString, TString>> obligatoryParamsPlaceholder) {
+TMap<TString, TMaybe<TString>> GetMetricParamsInfo(const ELossFunction loss, const TMaybe<TMap<TString, TString>>& obligatoryParamsPlaceholder) {
     TLossParams initialParams;
     TSet<TString> obligatoryParams;
     if (obligatoryParamsPlaceholder) {
@@ -5377,7 +5377,7 @@ TMap<TString, TMaybe<TString>> ExportMetricParamsInfo(const ELossFunction loss, 
             obligatoryParams.insert(parameter);
         }
     }
-    const auto& [metrics, validParams] = CreateMetricWithConstraints(loss, initialParams, 1);
+    const auto& [metrics, validParams] = CreateMetricWithValidParams(loss, initialParams, 1);
     const TString& createdMetricDescription = metrics[0]->GetDescription();
 
     // Get all valid params
@@ -5397,7 +5397,7 @@ TMap<TString, TMaybe<TString>> ExportMetricParamsInfo(const ELossFunction loss, 
     return exportParams;
 }
 
-NJson::TJsonValue ExportAllMetricsParams() {
+TMap<ELossFunction, TMap<TString, TMaybe<TString>>> GetAllMetricsParams() {
     const TMap<ELossFunction, TMap<TString, TString>> allObligatoryParams = {
         {ELossFunction::Lq, {{"q", "1"}}},
         {ELossFunction::Huber, {{"delta", "1"}}},
@@ -5420,7 +5420,6 @@ NJson::TJsonValue ExportAllMetricsParams() {
     };
 
     TMap<ELossFunction, TMap<TString, TMaybe<TString>>> allMetricParams;
-
     for (const ELossFunction& loss : GetEnumAllValues<ELossFunction>()) {
         if (unsupportedMetrics.contains(loss)) {
             continue;
@@ -5429,11 +5428,14 @@ NJson::TJsonValue ExportAllMetricsParams() {
         if (allObligatoryParams.contains(loss)) {
             lossObligatoryParams = allObligatoryParams.at(loss);
         }
-        const auto& params = ExportMetricParamsInfo(loss, lossObligatoryParams);
+        const auto& params = GetMetricParamsInfo(loss, lossObligatoryParams);
         allMetricParams[loss] = params;
     }
+    return allMetricParams;
+}
 
-    // Export params to JSON
+NJson::TJsonValue ExportAllMetricsParamsToJson() {
+    const TMap<ELossFunction, TMap<TString, TMaybe<TString>>> allMetricParams = GetAllMetricsParams();
     NJson::TJsonValue exportJsonParams;
 
     for (const auto& [loss, params] : allMetricParams) {
@@ -5447,6 +5449,5 @@ NJson::TJsonValue ExportAllMetricsParams() {
         }
         exportJsonParams.InsertValue(ToString(loss), metricJsonParams);
     }
-
     return exportJsonParams;
 }
