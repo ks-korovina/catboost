@@ -1142,6 +1142,7 @@ static TVector<THolder<IMetric>> CreateMetricClasswise(int approxDimension, cons
 }
 
 TVector<THolder<IMetric>> CreateCachingMetrics(const TMetricConfig& config) {
+    // TODO(kkorovina): refactor this function similarly to CreateMetric: create empty metrics and set their parameters.
     *config.ValidParams = TSet<TString>{};
     TVector<THolder<IMetric>> result;
 
@@ -1150,7 +1151,9 @@ TVector<THolder<IMetric>> CreateCachingMetrics(const TMetricConfig& config) {
             return CreateMetricClasswise<TF1CachingMetric>(config.ApproxDimension, config);
         }
         case ELossFunction::TotalF1: {
+            // do this in TTotalF1CachingMetric's constructor:
             config.ValidParams->insert("average");
+            // do this inside TTotalF1CachingMetric's SetParams:
             EF1AverageType averageType = EF1AverageType::Weighted;
             if (config.GetParamsMap().contains("average")) {
                 averageType = FromString<EF1AverageType>(config.GetParamsMap().at("average"));

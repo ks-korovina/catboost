@@ -15,6 +15,7 @@
 
 #include <library/cpp/threading/local_executor/local_executor.h>
 #include <library/cpp/containers/2d_array/2d_array.h>
+#include <library/cpp/json/json_value.h>
 
 #include <util/generic/fwd.h>
 #include <util/generic/array_ref.h>
@@ -168,6 +169,8 @@ struct IMetric {
     virtual const TMap<TString, TString>& GetHints() const = 0;
     virtual void AddHint(const TString& key, const TString& value) = 0;
     virtual bool NeedTarget() const = 0;
+    virtual void SetParams(const TMetricConfig& descriptionParams) = 0;
+    virtual NJson::TJsonValue GetParams() const = 0;
     virtual ~IMetric() = default;
 
 public:
@@ -175,6 +178,9 @@ public:
 };
 
 struct TMetric: public IMetric {
+    // Constructs a metric object which is not yet initialized.
+    explicit TMetric(ELossFunction lossFunction);
+    // TODO(kkorovina): can we remove this constructor at all?
     explicit TMetric(ELossFunction lossFunction, TLossParams descriptionParams);
     virtual EErrorType GetErrorType() const override;
     virtual double GetFinalError(const TMetricHolder& error) const override;
@@ -182,6 +188,10 @@ struct TMetric: public IMetric {
     virtual const TMap<TString, TString>& GetHints() const override;
     virtual void AddHint(const TString& key, const TString& value) override;
     virtual bool NeedTarget() const override;
+    // Throws an exception if params are not valid.
+    virtual void SetParams(const TMetricConfig& descriptionParams) override;
+    // Alternatively, we can add an inner ParamInfo class and return a list instead of JSON:
+    virtual NJson::TJsonValue GetParams() const override;
     // The default implementation of metric description formatting.
     // It uses LossFunction and DescriptionParams, which is user-specified metric options,
     // and constructs a Metric:key1=value1;key2=value2 string from them.
@@ -191,11 +201,14 @@ private:
     TMap<TString, TString> Hints;
     const ELossFunction LossFunction;
     const TLossParams DescriptionParams;
+    NJson::TJsonValue ValidParams;
 };
 
 struct TMultiRegressionMetric: public TMetric {
     explicit TMultiRegressionMetric(ELossFunction lossFunction, const TLossParams& descriptionParams)
         : TMetric(lossFunction, descriptionParams) {}
+    explicit TMultiRegressionMetric(ELossFunction lossFunction)
+        : TMetric(lossFunction) {}
     virtual TMetricHolder Eval(
         TConstArrayRef<TVector<double>> approx,
         TConstArrayRef<TVector<double>> approxDelta,
