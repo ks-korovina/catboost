@@ -31,6 +31,7 @@ PEERDIR(
     library/cpp/binsaver
     library/cpp/containers/2d_array
     library/cpp/containers/stack_vector
+    library/cpp/json
     library/cpp/dot_product
     library/cpp/threading/local_executor
 )
