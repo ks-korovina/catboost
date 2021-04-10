@@ -143,9 +143,8 @@ struct IMetric {
     struct TParamInfo {
         TString Name;
         bool IsMandatory;
-        TMaybe<NJson::TJsonValue> DefaultValue;
+        TMaybe<NJson::TJsonValue> Value;
     };
-
     virtual TMetricHolder Eval(
         const TVector<TVector<double>>& approx,
         TConstArrayRef<float> target,
@@ -175,8 +174,9 @@ struct IMetric {
     virtual const TMap<TString, TString>& GetHints() const = 0;
     virtual void AddHint(const TString& key, const TString& value) = 0;
     virtual bool NeedTarget() const = 0;
-    virtual void SetParams(const TLossParams& descriptionParams) = 0;
+    virtual void SetParams(const TMetricConfig& config) = 0;
     virtual TVector<TParamInfo> GetParams() const = 0;
+    virtual bool IsInitialized() const = 0;
     virtual ~IMetric() = default;
 public:
     TMetricParam<bool> UseWeights{"use_weights", true};
@@ -200,11 +200,16 @@ struct TMetric: public IMetric {
     // and constructs a Metric:key1=value1;key2=value2 string from them.
     // UseWeights is included in the description if the weights have been specified.
     virtual TString GetDescription() const override;
+    virtual bool IsInitialized() const override;
+
+protected:
+    bool Initialized = false;
+    TVector<TParamInfo> Params;
+
 private:
     TMap<TString, TString> Hints;
     const ELossFunction LossFunction;
     const TLossParams DescriptionParams;
-    TVector<TParamInfo> Params;
 };
 
 struct TMultiRegressionMetric: public TMetric {

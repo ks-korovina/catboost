@@ -96,6 +96,10 @@ TString TMetric::GetDescription() const {
     return BuildDescriptionFromParams(LossFunction, descriptionParamsCopy);
 }
 
+bool TMetric::IsInitialized() const {
+    return Initialized;
+}
+
 void TMetric::AddHint(const TString& key, const TString& value) {
     Hints[key] = value;
 }
@@ -514,7 +518,7 @@ namespace {
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         double GetFinalError(const TMetricHolder& error) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override;
+        void SetParams(const TMetricConfig& config) override;
     };
 }
 
@@ -568,7 +572,7 @@ void TRMSEWithUncertaintyMetric::GetBestValue(EMetricBestValue* valueType, float
     *valueType = EMetricBestValue::Min;
 }
 
-void TRMSEWithUncertaintyMetric::SetParams(const TMetricConfig& descriptionParams) {
+void TRMSEWithUncertaintyMetric::SetParams(const TMetricConfig& config) {
     CB_ENSURE(false, "not implemented");
 }
 
@@ -593,7 +597,7 @@ namespace {
         ) const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -652,6 +656,8 @@ void TRMSEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
 
 namespace {
     struct TLqMetric final: public TAdditiveMetric {
+        TLqMetric() : TAdditiveMetric(ELossFunction::Lq) {}
+
         explicit TLqMetric(double q, const TLossParams& params)
             : TAdditiveMetric(ELossFunction::Lq, params)
             , Q(q) {
@@ -671,10 +677,10 @@ namespace {
                 int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override;
 
     private:
-        const double Q;
+        double Q;
     };
 }
 
@@ -684,6 +690,15 @@ TVector<THolder<IMetric>> TLqMetric::Create(const TMetricConfig& config) {
     config.ValidParams->insert("q");
     return AsVector(MakeHolder<TLqMetric>(FromString<float>(config.GetParamsMap().at("q")),
                                           config.Params));
+}
+
+void TLqMetric::SetParams(const TMetricConfig& config) {
+    CB_ENSURE(config.GetParamsMap().contains("q"), "Metric " << ELossFunction::Lq << " requires q as parameter");
+    const double q = FromString<float>(config.GetParamsMap().at("q"));
+    CB_ENSURE(Q >= 1, "Lq metric is defined for q >= 1, got " << q);
+    Q = q;
+    Params.emplace_back(IMetric::TParamInfo{"Q", true, q});
+    Initialized = true;
 }
 
 TMetricHolder TLqMetric::EvalSingleThread(
@@ -751,7 +766,7 @@ namespace {
         ) const override;
         TString GetDescription() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double MaeAlpha = 0.5;
@@ -881,7 +896,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double Alpha;
@@ -969,7 +984,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double Alpha;
@@ -1072,7 +1087,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1144,7 +1159,7 @@ namespace {
                 int queryEndIndex
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double GreaterThan;
@@ -1209,7 +1224,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1304,7 +1319,7 @@ namespace {
                 int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double VariancePower;
@@ -1386,7 +1401,7 @@ namespace {
         ) const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1461,7 +1476,7 @@ namespace {
                 int end,
                 NPar::ILocalExecutor& executor) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1537,7 +1552,7 @@ namespace {
         ) const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1605,7 +1620,7 @@ namespace {
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         TVector<TString> GetStatDescriptions() const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1663,7 +1678,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1755,7 +1770,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1825,7 +1840,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -1939,7 +1954,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         template <bool HasDelta, bool HasWeight>
@@ -2058,7 +2073,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const int TopSize;
@@ -2164,7 +2179,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const int TopSize;
@@ -2298,7 +2313,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         TMetricHolder EvalSingleQuery(
@@ -2450,7 +2465,7 @@ namespace {
         }
         TString GetDescription() const override { CB_ENSURE(false, "helper class should not be used as metric"); }
         void GetBestValue(EMetricBestValue* /*valueType*/, float* /*bestValue*/) const override { CB_ENSURE(false, "helper class should not be used as metric"); }
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 
     struct TR2ImplMetric final: public TAdditiveMetric {
@@ -2472,7 +2487,7 @@ namespace {
         double GetFinalError(const TMetricHolder& /*error*/) const override { CB_ENSURE(false, "helper class should not be used as metric"); }
         TString GetDescription() const override { CB_ENSURE(false, "helper class should not be used as metric"); }
         void GetBestValue(EMetricBestValue* /*valueType*/, float* /*bestValue*/) const override { CB_ENSURE(false, "helper class should not be used as metric"); }
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double TargetMean = 0.0;
@@ -2510,7 +2525,7 @@ namespace {
         ) const;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -2667,7 +2682,7 @@ namespace {
             NPar::ILocalExecutor& executor) const override;
         TString GetDescription() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         int PositiveClass = 1;
@@ -2898,7 +2913,7 @@ namespace {
             NPar::ILocalExecutor& executor) const override;
         TString GetDescription() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
         const int PositiveClass = 1;
@@ -2993,7 +3008,7 @@ namespace {
             int end
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         const double Smoothness;
     };
@@ -3059,7 +3074,7 @@ namespace {
         ) const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3124,7 +3139,7 @@ namespace {
         ) const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3184,7 +3199,7 @@ namespace {
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         double GetFinalError(const TMetricHolder& error) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -3237,7 +3252,7 @@ namespace {
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         double GetFinalError(const TMetricHolder& error) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3293,7 +3308,7 @@ namespace {
         ) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         double GetFinalError(const TMetricHolder& error) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3376,7 +3391,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     };
 }
 
@@ -3444,7 +3459,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
         const int TopSize;
@@ -3522,7 +3537,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3600,7 +3615,7 @@ namespace {
         EErrorType GetErrorType() const override;
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         static constexpr double TargetBorder = GetDefaultTargetBorder();
@@ -3894,7 +3909,7 @@ namespace {
         bool NeedTarget() const override {
             return true;
         }
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
         NJson::TJsonValue GetParams() const override { CB_ENSURE(false, "not implemented"); }
     private:
         TCustomMetricDescriptor Descriptor;
@@ -4149,7 +4164,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double Alpha;
@@ -4219,7 +4234,7 @@ namespace {
         ) const override;
 
         void GetBestValue(EMetricBestValue *valueType, float *bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const double Delta;
@@ -4293,7 +4308,7 @@ namespace {
 
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         const ENdcgMetricType MetricType;
@@ -4388,7 +4403,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         const int TopSize;
     };
@@ -4498,7 +4513,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         int PositiveClass = 1;
         EAucType Type;
@@ -4679,7 +4694,7 @@ namespace {
         TString GetDescription() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
         double GetFinalError(const TMetricHolder& error) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
     private:
         const TMap<TString, TString> Params;
     };
@@ -4794,7 +4809,7 @@ namespace {
         ) const override;
         EErrorType GetErrorType() const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
-        void SetParams(const TMetricConfig& descriptionParams) override { CB_ENSURE(false, "not implemented"); }
+        void SetParams(const TMetricConfig& config) override { CB_ENSURE(false, "not implemented"); }
 
     private:
         void AddSingleQuery(const double* approxes,
