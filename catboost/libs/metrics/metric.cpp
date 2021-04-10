@@ -104,11 +104,9 @@ bool TMetric::NeedTarget() const {
     return GetErrorType() != EErrorType::PairwiseError;
 }
 
-NJson::TJsonValue TMetric::GetParams() const {
-    return ValidParams;
+TVector<TMetric::TParamInfo> TMetric::GetParams() const {
+    return Params;
 }
-
-void TMetric::SetParams(const TMetricConfig& descriptionParams) {}
 
 // helper function to set valid params that are common for several metrics.
 TSet<TString> ValidParams(ELossFunction metric) {
