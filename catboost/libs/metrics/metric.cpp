@@ -207,9 +207,7 @@ namespace {
         explicit TCrossEntropyMetric(ELossFunction lossFunction, const TLossParams& params);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -338,6 +336,10 @@ TMetricHolder TCrossEntropyMetric::EvalSingleThread(
     }
 }
 
+TVector<TParamInfo> TCrossEntropyMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 void TCrossEntropyMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
@@ -350,9 +352,7 @@ namespace {
         explicit TCtrFactorMetric(const TLossParams& params)
             : TAdditiveMetric(ELossFunction::CtrFactor, params) {
         }
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
             const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -410,6 +410,10 @@ void TCtrFactorMetric::GetBestValue(EMetricBestValue* valueType, float* bestValu
     *bestValue = 1;
 }
 
+TVector<TParamInfo> TCtrFactorMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* MultiRMSE */
 namespace {
     struct TMultiRMSEMetric final: public TAdditiveMultiRegressionMetric {
@@ -418,9 +422,7 @@ namespace {
         {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             TConstArrayRef<TVector<double>> approx,
@@ -475,6 +477,10 @@ void TMultiRMSEMetric::GetBestValue(EMetricBestValue* valueType, float* /*bestVa
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMultiRMSEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* RMSEWithUncertainty */
 namespace {
     class TRMSEWithUncertaintyMetric final: public TAdditiveMultiRegressionMetric {
@@ -484,9 +490,7 @@ namespace {
             const TLossParams& descriptionParams);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             TConstArrayRef<TVector<double>> approx,
@@ -552,6 +556,10 @@ void TRMSEWithUncertaintyMetric::GetBestValue(EMetricBestValue* valueType, float
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TRMSEWithUncertaintyMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* RMSE */
 
 namespace {
@@ -561,9 +569,7 @@ namespace {
         {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
             const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -630,6 +636,10 @@ void TRMSEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TRMSEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* Lq */
 
 namespace {
@@ -641,9 +651,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -660,6 +668,11 @@ namespace {
     private:
         const double Q;
     };
+}
+
+TVector<TParamInfo> TLqMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"q", true, {}}};
 }
 
 // static
@@ -722,9 +735,7 @@ namespace {
                                  const TLossParams& params, double alpha, double delta);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -848,6 +859,12 @@ void TQuantileMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TQuantileMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"alpha", false, MaeAlpha},
+            TParamInfo{"delta", false, MaeDelta}};
+}
+
 /* Expectile */
 namespace {
     class TExpectileMetric final: public TAdditiveMetric {
@@ -855,9 +872,7 @@ namespace {
         explicit TExpectileMetric(const TLossParams& params, double alpha);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -937,6 +952,11 @@ void TExpectileMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TExpectileMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"alpha", false, DefaultAlpha}};
+};
+
 /* LogLinQuantile */
 
 namespace {
@@ -945,9 +965,7 @@ namespace {
         explicit TLogLinQuantileMetric(const TLossParams& params, double alpha);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1041,6 +1059,11 @@ void TLogLinQuantileMetric::GetBestValue(EMetricBestValue* valueType, float*) co
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TLogLinQuantileMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"alpha", false, DefaultAlpha}};
+}
+
 /* MAPE */
 
 namespace {
@@ -1050,9 +1073,7 @@ namespace {
         {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1113,6 +1134,10 @@ void TMAPEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMAPEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* Greater K */
 
 namespace {
@@ -1124,9 +1149,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1183,6 +1206,11 @@ void TNumErrorsMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TNumErrorsMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"greater_than", true, {}}};
+};
+
 /* Poisson */
 
 namespace {
@@ -1192,9 +1220,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
             const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -1277,6 +1303,10 @@ void TPoissonMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TPoissonMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* Tweedie */
 
 namespace {
@@ -1288,9 +1318,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1362,6 +1390,11 @@ void TTweedieMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TTweedieMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"variance_power", true, {}}};
+}
+
 /* Mean squared logarithmic error */
 
 namespace {
@@ -1371,9 +1404,7 @@ namespace {
         {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1429,6 +1460,10 @@ void TMSLEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMSLEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* Median absolute error */
 
 namespace {
@@ -1439,9 +1474,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder Eval(
                 const TVector<TVector<double>>& approx,
@@ -1516,6 +1549,10 @@ void TMedianAbsoluteErrorMetric::GetBestValue(EMetricBestValue* valueType, float
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMedianAbsoluteErrorMetric::ValidParams() {
+    return {};
+};
+
 /* Symmetric mean absolute percentage error */
 
 namespace {
@@ -1526,9 +1563,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1585,6 +1620,10 @@ void TSMAPEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TSMAPEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* loglikelihood of prediction */
 
 namespace {
@@ -1595,9 +1634,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1647,6 +1684,10 @@ TVector<TString> TLLPMetric::GetStatDescriptions() const {
     return {"intermediate result", "clicks", "shows"};
 }
 
+TVector<TParamInfo> TLLPMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* MultiClass */
 
 namespace {
@@ -1657,9 +1698,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1741,6 +1780,10 @@ void TMultiClassMetric::GetBestValue(EMetricBestValue* valueType, float*) const 
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMultiClassMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* MultiClassOneVsAll */
 
 namespace {
@@ -1751,9 +1794,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1812,6 +1853,10 @@ void TMultiClassOneVsAllMetric::GetBestValue(EMetricBestValue* valueType, float*
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TMultiClassOneVsAllMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* PairLogit */
 
 namespace {
@@ -1822,9 +1867,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -1927,6 +1970,11 @@ void TPairLogitMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TPairLogitMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"max_pairs", false, {}}};
+}
+
 /* QueryRMSE */
 
 namespace {
@@ -1937,9 +1985,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -2050,6 +2096,10 @@ void TQueryRMSEMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TQueryRMSEMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* PFound */
 
 namespace {
@@ -2058,9 +2108,7 @@ namespace {
                 int topSize, double decay);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -2157,6 +2205,11 @@ void TPFoundMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TPFoundMetric::ValidParams() {
+    return {TParamInfo{"top", false, DefaultTopSize},
+            TParamInfo{"decay", false, DefaultDecay}};
+};
+
 /* NDCG@N */
 
 namespace {
@@ -2165,9 +2218,7 @@ namespace {
                             int topSize, ENdcgMetricType type, bool normalized, ENdcgDenominatorType denominator);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -2189,8 +2240,19 @@ namespace {
         const ENdcgMetricType MetricType;
         const bool Normalized;
         const ENdcgDenominatorType DenominatorType;
+
+        static constexpr int DefaultTopSize = -1;
+        static constexpr ENdcgMetricType DefaultMetricType = ENdcgMetricType::Base;
+        static constexpr ENdcgDenominatorType DefaultDenominatorType = ENdcgDenominatorType::LogPosition;
     };
 }
+
+TVector<TParamInfo> TDcgMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"top", false, DefaultTopSize},
+            TParamInfo{"type", false, ToString(DefaultMetricType)},
+            TParamInfo{"denominator", false, ToString(DefaultDenominatorType)}};
+};
 
 // static
 TVector<THolder<IMetric>> TDcgMetric::Create(const TMetricConfig& config) {
@@ -2199,13 +2261,13 @@ TVector<THolder<IMetric>> TDcgMetric::Create(const TMetricConfig& config) {
     auto itDenominator = config.GetParamsMap().find("denominator");
     int topSize = itTopSize != config.GetParamsMap().end() ? FromString<int>(itTopSize->second) : -1;
 
-    ENdcgMetricType type = ENdcgMetricType::Base;
+    ENdcgMetricType type = DefaultMetricType;
 
     if (itType != config.GetParamsMap().end()) {
         type = FromString<ENdcgMetricType>(itType->second);
     }
 
-    ENdcgDenominatorType denominator = ENdcgDenominatorType::LogPosition;
+    ENdcgDenominatorType denominator = DefaultDenominatorType;
 
     if (itDenominator != config.GetParamsMap().end()) {
         denominator = FromString<ENdcgDenominatorType>(itDenominator->second);
@@ -2303,9 +2365,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -2332,6 +2392,9 @@ namespace {
             TArrayRef<double> softmax
         ) const;
         double Beta;
+
+        static constexpr double DefaultBeta = 1.0;
+        static constexpr double DefaultLambda = 0.01;
     };
 }
 
@@ -2446,6 +2509,12 @@ void TQuerySoftMaxMetric::GetBestValue(EMetricBestValue* valueType, float*) cons
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TQuerySoftMaxMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"beta", false, DefaultBeta},
+            TParamInfo{"lambda", false, DefaultLambda}};
+};
+
 /* R2 */
 
 namespace {
@@ -2502,9 +2571,7 @@ namespace {
         {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder Eval(
             const TVector<TVector<double>>& approx,
@@ -2620,6 +2687,10 @@ void TR2Metric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TR2Metric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* AUC */
 
 template <typename T>
@@ -2664,9 +2735,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder Eval(
             const TVector<TVector<double>>& approx,
@@ -2697,6 +2766,14 @@ namespace {
         TMaybe<TVector<TVector<double>>> MisclassCostMatrix = Nothing();
     };
 }
+
+TVector<TParamInfo> TAUCMetric::ValidParams() {
+    NJson::TJsonValue typeValue;
+    typeValue.InsertValue("Dimension==1", "Classic");
+    typeValue.InsertValue("Dimension>1", "Mu");
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"type", false, typeValue}};
+};
 
 TVector<THolder<IMetric>> TAUCMetric::Create(const TMetricConfig& config) {
     config.ValidParams->insert("type");
@@ -2897,9 +2974,7 @@ namespace {
             , IsMultiClass(true) {
         }
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder Eval(
             const TVector<TVector<double>>& approx,
             TConstArrayRef<float> target,
@@ -2991,6 +3066,14 @@ void TNormalizedGini::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TNormalizedGini::ValidParams() {
+    NJson::TJsonValue borderValue;
+    borderValue.InsertValue("Dimension==1", TargetBorder);
+    borderValue.InsertValue("Dimension>1", NJson::JSON_NULL);
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"border", false, borderValue}};
+};
+
 /* Fair Loss metric */
 
 namespace {
@@ -3004,9 +3087,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3026,7 +3107,7 @@ namespace {
 
 // static.
 TVector<THolder<IMetric>> TFairLossMetric::Create(const TMetricConfig& config) {
-    double smoothness = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "smoothness", TFairLossMetric::DefaultSmoothness);
+    double smoothness = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "smoothness", DefaultSmoothness);
     config.ValidParams->insert("smoothness");
     return AsVector(MakeHolder<TFairLossMetric>(config.Params, smoothness));
 }
@@ -3059,6 +3140,11 @@ void TFairLossMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TFairLossMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"smoothness", false, DefaultSmoothness}};
+};
+
 /* Balanced Accuracy */
 
 namespace {
@@ -3071,9 +3157,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3126,6 +3210,11 @@ double TBalancedAccuracyMetric::GetFinalError(const TMetricHolder& error) const 
     return CalcBalancedAccuracyMetric(error);
 }
 
+TVector<TParamInfo> TBalancedAccuracyMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"border", false, TargetBorder}};
+}
+
 /* Balanced Error Rate */
 
 namespace {
@@ -3138,9 +3227,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3193,6 +3280,11 @@ double TBalancedErrorRate::GetFinalError(const TMetricHolder& error) const {
     return 1 - CalcBalancedAccuracyMetric(error);
 }
 
+TVector<TParamInfo> TBalancedErrorRate::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"border", false, TargetBorder}};
+}
+
 /* Brier Score */
 
 namespace {
@@ -3201,9 +3293,7 @@ namespace {
             : TAdditiveMetric(ELossFunction::BrierScore, params) {
             UseWeights.MakeIgnored();
         }
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
                 const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -3246,6 +3336,10 @@ double TBrierScoreMetric::GetFinalError(const TMetricHolder& error) const {
     return error.Stats[1] != 0 ? error.Stats[0] / error.Stats[1] : 0;
 }
 
+TVector<TParamInfo> TBrierScoreMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* Hinge loss */
 
 namespace {
@@ -3255,9 +3349,7 @@ namespace {
             {}
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3305,6 +3397,11 @@ double THingeLossMetric::GetFinalError(const TMetricHolder& error) const {
     return error.Stats[1] != 0 ? error.Stats[0] / error.Stats[1] : 0;
 }
 
+TVector<TParamInfo> THingeLossMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"border", false, TargetBorder}};
+};
+
 /* Hamming loss */
 
 namespace {
@@ -3313,9 +3410,7 @@ namespace {
                                     double predictionBorder);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3388,6 +3483,11 @@ double THammingLossMetric::GetFinalError(const TMetricHolder& error) const {
     return error.Stats[1] != 0 ? error.Stats[0] / error.Stats[1] : 0;
 }
 
+TVector<TParamInfo> THammingLossMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"border", false, TargetBorder}};
+};
+
 /* PairAccuracy */
 
 namespace {
@@ -3398,9 +3498,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3459,6 +3557,10 @@ void TPairAccuracyMetric::GetBestValue(EMetricBestValue* valueType, float*) cons
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TPairAccuracyMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
+
 /* PrecisionAtK */
 
 namespace {
@@ -3467,9 +3569,7 @@ namespace {
                                      int topSize);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -3485,6 +3585,7 @@ namespace {
         double GetFinalError(const TMetricHolder& error) const override;
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
     private:
+        static constexpr int DefaultTopSize = -1;
         static constexpr double TargetBorder = GetDefaultTargetBorder();
         const int TopSize;
     };
@@ -3492,7 +3593,7 @@ namespace {
 
 // static.
 TVector<THolder<IMetric>> TPrecisionAtKMetric::Create(const TMetricConfig& config) {
-    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", -1);
+    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", DefaultTopSize);
     config.ValidParams->insert("top");
     config.ValidParams->insert("border");
     return AsVector(MakeHolder<TPrecisionAtKMetric>(config.Params, topSize));
@@ -3542,15 +3643,19 @@ void TPrecisionAtKMetric::GetBestValue(EMetricBestValue* valueType, float*) cons
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TPrecisionAtKMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"top", false, DefaultTopSize},
+            TParamInfo{"border", false, TargetBorder}};
+};
+
 /* RecallAtK */
 
 namespace {
     struct TRecallAtKMetric final: public TAdditiveMetric {
         explicit TRecallAtKMetric(const TLossParams& params, int topSize);
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
                 const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -3566,13 +3671,14 @@ namespace {
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
 
     private:
+        static constexpr int DefaultTopSize = -1;
         static constexpr double TargetBorder = GetDefaultTargetBorder();
         const int TopSize;
     };
 }
 
 TVector<THolder<IMetric>> TRecallAtKMetric::Create(const TMetricConfig& config) {
-    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", -1);
+    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", DefaultTopSize);
     config.ValidParams->insert("top");
     config.ValidParams->insert("border");
     return AsVector(MakeHolder<TRecallAtKMetric>(config.Params, topSize));
@@ -3622,15 +3728,19 @@ void TRecallAtKMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TRecallAtKMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"top", false, DefaultTopSize},
+            TParamInfo{"border", false, TargetBorder}};
+};
+
 /* Mean Average Precision at k */
 
 namespace {
     struct TMAPKMetric final: public TAdditiveMetric {
         explicit TMAPKMetric(const TLossParams& params, int topSize);
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
                 const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -3646,6 +3756,7 @@ namespace {
         void GetBestValue(EMetricBestValue* valueType, float* bestValue) const override;
 
     private:
+        static constexpr int DefaultTopSize = -1;
         static constexpr double TargetBorder = GetDefaultTargetBorder();
         const int TopSize;
     };
@@ -3653,7 +3764,7 @@ namespace {
 
 // static.
 TVector<THolder<IMetric>> TMAPKMetric::Create(const TMetricConfig& config) {
-    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", -1);
+    int topSize = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "top", DefaultTopSize);
     config.ValidParams->insert("top");
     config.ValidParams->insert("border");
     return AsVector(MakeHolder<TMAPKMetric>(config.Params, topSize));
@@ -3696,7 +3807,6 @@ EErrorType TMAPKMetric::GetErrorType() const {
     return EErrorType::QuerywiseError;
 }
 
-// Mean average precision at K
 double TMAPKMetric::GetFinalError(const TMetricHolder& error) const {
     return error.Stats[1] != 0 ? error.Stats[0] / error.Stats[1] : 0;
 }
@@ -3704,6 +3814,12 @@ double TMAPKMetric::GetFinalError(const TMetricHolder& error) const {
 void TMAPKMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
+
+TVector<TParamInfo> TMAPKMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"top", false, DefaultTopSize},
+            TParamInfo{"border", false, TargetBorder}};
+};
 
 /* Precision-Recall AUC */
 
@@ -3721,9 +3837,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder Eval(
                 const TVector<TVector<double>>& approx,
@@ -3892,6 +4006,10 @@ TMetricHolder TPRAUCMetric::Eval(
 void TPRAUCMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
+
+TVector<TParamInfo> TPRAUCMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true}};
+};
 
 /* Custom */
 
@@ -4181,9 +4299,7 @@ namespace {
     public:
         explicit TUserDefinedQuerywiseMetric(const TLossParams& params);
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
             const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -4199,6 +4315,7 @@ namespace {
 
     private:
         const double Alpha;
+        static constexpr double DefaultAlpha = 0.0;
     };
 }
 
@@ -4210,7 +4327,7 @@ TVector<THolder<IMetric>> TUserDefinedQuerywiseMetric::Create(const TMetricConfi
 
 TUserDefinedQuerywiseMetric::TUserDefinedQuerywiseMetric(const TLossParams& params)
     : TAdditiveMetric(ELossFunction::UserQuerywiseMetric, params)
-    , Alpha(params.GetParamsMap().contains("alpha") ? FromString<float>(params.GetParamsMap().at("alpha")) : 0.0)
+    , Alpha(params.GetParamsMap().contains("alpha") ? FromString<float>(params.GetParamsMap().at("alpha")) : DefaultAlpha)
 {
     UseWeights.MakeIgnored();
 }
@@ -4239,6 +4356,11 @@ void TUserDefinedQuerywiseMetric::GetBestValue(EMetricBestValue* valueType, floa
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> TUserDefinedQuerywiseMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"alpha", false, DefaultAlpha}};
+};
+
 /* Huber loss */
 
 namespace {
@@ -4252,9 +4374,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -4318,6 +4438,11 @@ void THuberLossMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
 
+TVector<TParamInfo> THuberLossMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"delta", true, {}}};
+};
+
 /* FilteredNdcg */
 
 namespace {
@@ -4327,9 +4452,7 @@ namespace {
                                     ENdcgMetricType metricType, ENdcgDenominatorType denominatorType);
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -4348,19 +4471,22 @@ namespace {
     private:
         const ENdcgMetricType MetricType;
         const ENdcgDenominatorType DenominatorType;
+
+        static constexpr ENdcgMetricType DefaultMetricType = ENdcgMetricType::Base;
+        static constexpr ENdcgDenominatorType DefaultDenominatorType= ENdcgDenominatorType::Position;
     };
 }
 
 // static.
 TVector<THolder<IMetric>> TFilteredDcgMetric::Create(const TMetricConfig& config) {
-    auto type = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "type", ENdcgMetricType::Base);
-    auto denominator = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "denominator", ENdcgDenominatorType::Position);
+    auto type = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "type", DefaultMetricType);
+    auto denominator = NCatboostOptions::GetParamOrDefault(config.GetParamsMap(), "denominator", DefaultDenominatorType);
     config.ValidParams->insert("sigma");
     config.ValidParams->insert("num_estimations");
     config.ValidParams->insert("type");
     config.ValidParams->insert("denominator");
     return AsVector(MakeHolder<TFilteredDcgMetric>(
-        config.Params,type, denominator));
+        config.Params, type, denominator));
 }
 
 TFilteredDcgMetric::TFilteredDcgMetric(const TLossParams& params,
@@ -4411,6 +4537,11 @@ void TFilteredDcgMetric::GetBestValue(EMetricBestValue* valueType, float*) const
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TFilteredDcgMetric::ValidParams() {
+    return {TParamInfo{"type", false, ToString(DefaultMetricType)},
+            TParamInfo{"denominator", false, ToString(DefaultDenominatorType)}};
+};
+
 /* AverageGain */
 
 namespace {
@@ -4425,9 +4556,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -4511,6 +4640,11 @@ void TAverageGain::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Max;
 }
 
+TVector<TParamInfo> TAverageGain::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"top", true, {}}};
+}
+
 /* QueryAUC */
 
 namespace {
@@ -4537,9 +4671,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -4559,6 +4691,14 @@ namespace {
         TMaybe<TVector<TVector<double>>> MisclassCostMatrix = Nothing();
     };
 }
+
+TVector<TParamInfo> TQueryAUCMetric::ValidParams() {
+    NJson::TJsonValue typeValue;
+    typeValue.InsertValue("Dimension==1", "Classic");
+    typeValue.InsertValue("Dimension>1", "Mu");
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"type", false, typeValue}};
+};
 
 TVector<THolder<IMetric>> TQueryAUCMetric::Create(const TMetricConfig& config) {
     config.ValidParams->insert("type");
@@ -4718,9 +4858,7 @@ namespace {
         }
 
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
 
         TMetricHolder EvalSingleThread(
             const TConstArrayRef<TConstArrayRef<double>> approx,
@@ -4787,6 +4925,10 @@ double TCombinationLoss::GetFinalError(const TMetricHolder& error) const {
     return error.Stats[0];
 }
 
+TVector<TParamInfo> TCombinationLoss::ValidParams() {
+    return {};
+};
+
 // TQueryCrossEntropyMetric
 
 static inline bool IsSingleClassQuery(const float* targets, int querySize) {
@@ -4838,9 +4980,7 @@ namespace {
         explicit TQueryCrossEntropyMetric(const TLossParams& params,
                                           double alpha);
         static TVector<THolder<IMetric>> Create(const TMetricConfig& config);
-        static TMap<TString, TParamInfo> ValidParams() {
-            return {};
-        }
+        static TVector<TParamInfo> ValidParams();
         TMetricHolder EvalSingleThread(
                 const TConstArrayRef<TConstArrayRef<double>> approx,
                 const TConstArrayRef<TConstArrayRef<double>> approxDelta,
@@ -4949,6 +5089,12 @@ TQueryCrossEntropyMetric::TQueryCrossEntropyMetric(const TLossParams& params,
 void TQueryCrossEntropyMetric::GetBestValue(EMetricBestValue* valueType, float*) const {
     *valueType = EMetricBestValue::Min;
 }
+
+TVector<TParamInfo> TQueryCrossEntropyMetric::ValidParams() {
+    return {TParamInfo{"use_weights", false, true},
+            TParamInfo{"alpha", false, DefaultAlpha},
+            TParamInfo{"raw_values_scale", false, {}}};
+};
 
 /* Create */
 
@@ -5214,14 +5360,13 @@ TVector<THolder<IMetric>> CreateMetrics(
     return metrics;
 }
 
-TMap<TString, TParamInfo> ValidParams(ELossFunction metric) {
+TVector<TParamInfo> ValidParams(ELossFunction metric) {
     switch (metric) {
         case ELossFunction::MultiRMSE:
             return TMultiRMSEMetric::ValidParams();
         case ELossFunction::RMSEWithUncertainty:
             return TRMSEWithUncertaintyMetric::ValidParams();
         case ELossFunction::Logloss:
-            return TCrossEntropyMetric::ValidParams();
         case ELossFunction::CrossEntropy:
             return TCrossEntropyMetric::ValidParams();
         case ELossFunction::RMSE:
@@ -5317,8 +5462,8 @@ TMap<TString, TParamInfo> ValidParams(ELossFunction metric) {
     }
 }
 
-TMap<ELossFunction, TMap<TString, TParamInfo>> GetAllMetricsValidParams() {
-	TMap<ELossFunction, TMap<TString, TParamInfo>> allMetricParams;
+TMap<ELossFunction, TVector<TParamInfo>> GetAllMetricsValidParams() {
+	TMap<ELossFunction, TVector<TParamInfo>> allMetricParams;
 	for (const ELossFunction& loss : GetEnumAllValues<ELossFunction>()) {
         try {
             allMetricParams.emplace(loss, ValidParams(loss));
@@ -5330,19 +5475,18 @@ TMap<ELossFunction, TMap<TString, TParamInfo>> GetAllMetricsValidParams() {
 }
 
 NJson::TJsonValue ExportAllMetricsParamsToJson() {
-    NJson::TJsonValue exportJsonParams;
+    NJson::TJsonValue exportJson;
     for (const auto& [loss, params] : GetAllMetricsValidParams()) {
-        NJson::TJsonValue metricJsonParams;
-        for (const auto& [parameter, value] : params) {
-            if (!value.IsMandatory) {
-                metricJsonParams.InsertValue(parameter, *value.DefaultValue);
-            } else {
-                metricJsonParams.InsertValue(parameter, NJson::TJsonValue());
-            }
+        NJson::TJsonValue metricJson;
+        for (const auto& paramInfo : params) {
+            NJson::TJsonValue paramJson;
+            paramJson.InsertValue("is_mandatory", paramInfo.IsMandatory);
+            paramJson.InsertValue("default_value", paramInfo.DefaultValue);
+            metricJson.InsertValue(paramInfo.Name, paramJson);
         }
-        exportJsonParams.InsertValue(ToString(loss), metricJsonParams);
+        exportJson.InsertValue(ToString(loss), metricJson);
     }
-    return exportJsonParams;
+    return exportJson;
 }
 
 static inline bool ShouldConsiderWeightsByDefault(const THolder<IMetric>& metric) {
